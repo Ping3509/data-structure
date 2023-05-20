@@ -1,0 +1,643 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2513
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;\f1\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \
+1.11\
+\
+template <typename T>\
+\
+T count(T *arr, T n, T value)\{\
+\
+if(n < 1)\
+\
+throw "n should be >=1";\
+\
+int cnt=0;\
+\
+for(int i=0;i<=n-1;i++)\{\
+\
+if(arr[i]==value) cnt++;\
+\
+\}\
+\
+return cnt;\
+\
+\}\
+\
+\
+1.12\
+\
+template <typename T>\
+\
+void make2dArray(T** &arr_2d, int size, T *rowSize)\{\
+\
+arr_2d = new T *[size];\
+\
+for(int i=0;i<size;i++)\{\
+\
+arr_2d[i]= new T [rowSize[i]];\
+\
+\}\
+\
+\}\
+\
+\
+1.13\
+\
+template<typename T>\
+\
+void changeLength1D(T** &oldarr, int oldLength, int newLength)\{\
+\
+T* temp = new T [newLength];\
+\
+int num=min(oldLength, newLength);\
+\
+copy(oldarr, oldarr+num, temp);\
+\
+delete[] oldarr;\
+\
+oldarr=temp;\
+\
+\}\
+\
+\
+1.14\
+\
+template<typename T>\
+\
+void changeLength1D(T** &arr, int oldRows, int oldColumns, int newRows, int newColumns)\{\
+\
+T** temp = new T * [newRows];\
+\
+for(int i=0; i<newRows;i++)\{\
+\
+temp[i]=new T [newColumns];\
+\
+\}\
+\
+for(int i=0;i<min(oldRows,newRows);i++)\{\
+\
+copy(arr[i],arr[i]+min(oldRows,newRows),temp);\
+\
+delete []arr[i];\
+\
+\}\
+\
+arr=temp;\
+\
+\}\
+\
+\
+1.16\
+\
+#include <cmath>\
+\
+#include <exception>\
+\
+#include <iostream>\
+\
+#include <ostream>\
+\
+#include <string>\
+\
+class IllegalParameterValue \{\
+\
+friend std::ostream& operator<<(std::ostream&, const IllegalParameterValue&);\
+\
+public:\
+\
+IllegalParameterValue() : message_("Illegal parameter value")\{\};\
+\
+IllegalParameterValue(const char* the_message) \{ message_ = the_message; \};\
+\
+~IllegalParameterValue() = default;\
+\
+private:\
+\
+std::string message_;\
+\
+\};\'a0 // IllegalParameterValue\
+\
+std::ostream& operator<<(std::ostream& out,\
+\
+const IllegalParameterValue& illegalParameterValue) \{\
+\
+out << illegalParameterValue.message_;\
+\
+return out;\
+\
+\}\
+\
+#define CURRENT_2_ABS_LONG(c) ((c).dollars_ * 100 + (c).cents_)\
+\
+#define CURRENCY_2_LONG(c) \\\\\
+\
+((c).sign_ == PLUS ? CURRENT_2_ABS_LONG(c) : -CURRENT_2_ABS_LONG(c))\
+\
+class Currency \{\
+\
+friend std::ostream& operator<<(std::ostream&, const Currency&);\
+\
+public:\
+\
+typedef enum \{ PLUS = 0, MINUS \} SignType;\
+\
+typedef unsigned long DOLLAR_TYPE;\
+\
+typedef unsigned int CENT_TYPE;\
+\
+public:\
+\
+Currency(SignType the_sign = PLUS, DOLLAR_TYPE the_dollars = 0,\
+\
+CENT_TYPE the_cents = 0);\
+\
+~Currency() \{\}\
+\
+void SetValue(SignType, DOLLAR_TYPE, CENT_TYPE);\
+\
+void SetValue(double);\
+\
+SignType GetSign() const \{ return sign_; \}\
+\
+DOLLAR_TYPE GetDollars() const \{ return dollars_; \}\
+\
+CENT_TYPE GetCents() const \{ return cents_; \}\
+\
+Currency Add(const Currency&) const;\
+\
+Currency SubTract(const Currency& x) const;\
+\
+Currency Percent(double x) const;\
+\
+Currency Multiply(double x) const;\
+\
+Currency Divide(double x) const;\
+\
+Currency& Increment(const Currency&);\
+\
+void Input();\
+\
+private:\
+\
+SignType sign_;\
+\
+DOLLAR_TYPE dollars_;\
+\
+CENT_TYPE cents_;\
+\
+\};\'a0 // class Currency\
+\
+Currency::Currency(SignType the_sign, DOLLAR_TYPE the_dollars,\
+\
+CENT_TYPE the_cents) \{\
+\
+SetValue(the_sign, the_dollars, the_cents);\
+\
+\}\
+\
+void Currency::SetValue(SignType the_sign, DOLLAR_TYPE the_dollar,\
+\
+CENT_TYPE the_cent) \{\
+\
+if (the_cent > 99) throw IllegalParameterValue("Cents should be < 100");\
+\
+sign_ = the_sign;\
+\
+dollars_ = the_dollar;\
+\
+cents_ = the_cent;\
+\
+\}\
+\
+void Currency::SetValue(double the_amount) \{\
+\
+sign_ = the_amount > 0 ? PLUS : MINUS;\
+\
+the_amount = std::abs(the_amount);\
+\
+dollars_ = static_cast<DOLLAR_TYPE>(the_amount);\
+\
+cents_ = static_cast<CENT_TYPE>((the_amount + 0.001 - dollars_) * 100);\
+\
+\}\
+\
+Currency Currency::Add(const Currency& x) const \{\
+\
+long a, b, c;\
+\
+a = dollars_ * 100 + cents_;\
+\
+a = PLUS == sign_ ? a : -a;\
+\
+b = x.dollars_ * 100 + cents_;\
+\
+b = PLUS == sign_ ? b : -b;\
+\
+c = a + b;\
+\
+SignType result_sign = c >= 0 ? PLUS : MINUS;\
+\
+DOLLAR_TYPE result_dollar = std::abs(c) / 100;\
+\
+CENT_TYPE result_cent = std::abs(c) - result_dollar * 100;\
+\
+Currency result(result_sign, result_dollar, result_cent);\
+\
+return result;\
+\
+\}\
+\
+Currency Currency::SubTract(const Currency& x) const \{\
+\
+long a, b, c;\
+\
+a = dollars_ * 100 + cents_;\
+\
+a = PLUS == sign_ ? a : -a;\
+\
+b = x.dollars_ * 100 + x.cents_;\
+\
+b = PLUS == x.sign_ ? b : -b;\
+\
+c = a - b;\
+\
+SignType result_sign = c >= 0 ? PLUS : MINUS;\
+\
+DOLLAR_TYPE result_dollar = std::abs(c) / 100;\
+\
+CENT_TYPE result_cent = std::abs(c) - result_dollar * 100;\
+\
+return Currency(result_sign, result_dollar, result_cent);\
+\
+\}\
+\
+Currency Currency::Percent(double x) const \{\
+\
+long a = CURRENCY_2_LONG(*this);\
+\
+Currency result;\
+\
+result.SetValue(a * x / 100);\
+\
+return result;\
+\
+\}\
+\
+Currency Currency::Multiply(double x) const \{\
+\
+long a = CURRENCY_2_LONG(*this);\
+\
+Currency result;\
+\
+result.SetValue(a * x / 100);\
+\
+return result;\
+\
+\}\
+\
+Currency Currency::Divide(double x) const \{\
+\
+long a = CURRENCY_2_LONG(*this);\
+\
+Currency result;\
+\
+result.SetValue(a / x / 100);\
+\
+return result;\
+\
+\}\
+\
+Currency& Currency::Increment(const Currency& x) \{\
+\
+*this = Add(x);\
+\
+return *this;\
+\
+\}\
+\
+void Currency::Input() \{\
+\
+double amount;\
+\
+std::cin >> amount;\
+\
+SetValue(amount);\
+\
+\}\
+\
+std::ostream& operator<<(std::ostream& out, const Currency& x) \{\
+\
+if (Currency::MINUS == x.sign_) out << '-';\
+\
+out << '$' << x.dollars_ << '.';\
+\
+if (x.cents_ < 10) out << '0';\
+\
+out << x.cents_;\
+\
+\}\
+\
+int main() \{\
+\
+IllegalParameterValue illegal_value;\
+\
+std::cout << illegal_value << std::endl;\
+\
+Currency currency1;\
+\
+currency1.SetValue(201.23);\
+\
+std::cout << currency1 << std::endl;\
+\
+Currency currency2;\
+\
+currency2.SetValue(-100.23);\
+\
+std::cout << currency2 << std::endl;\
+\
+std::cout << currency1.SubTract(currency2) << std::endl;\
+\
+std::cout << currency1 << std::endl;\
+\
+std::cout << currency1.Percent(0.3) << std::endl;\
+\
+std::cout << currency1.Multiply(4.3) << std::endl;\
+\
+std::cout << currency1.Divide(4.3) << std::endl;\
+\
+return 0;\
+\
+\}\
+\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1 \cf2 1.17\
+\pard\pardeftab720\partightenfactor0
+
+\f0 \cf2 #include <cmath>\
+#include <iostream>\
+#include <ostream>\
+\
+class Currency \{\
+ public:\
+  typedef enum \{ PLUS = 0, MINUS \} SignType;\
+  typedef unsigned long DollarType;\
+  typedef unsigned int CentType;\
+\
+ public:\
+  Currency(SignType the_sign = PLUS, DollarType the_dollar = 0,\
+           CentType the_cent = 0);\
+  ~Currency() \{\}\
+  void SetValue(SignType, DollarType, CentType);\
+  void SetValue(double);\
+  SignType GetSign() const \{ return amount_ >= 0 ? PLUS : MINUS; \}\
+  DollarType GetDollars() const \{ return std::abs(amount_) / 100; \}\
+  CentType GetCents() const \{ return std::abs(amount_) - GetDollars() * 100; \}\
+  Currency SubTract(const Currency& x) const;\
+  Currency Percent(double x) const;\
+  Currency Multiply(double x) const;\
+  Currency Divide(double x) const;\
+  Currency Add(const Currency& x) const;\
+  Currency& Increase(const Currency& x) \{\
+    amount_ += x.amount_;\
+    return *this;\
+  \}\
+  void Input();\
+  void Output() const;\
+\
+ private:\
+  long amount_;\
+\};  // class Currency\
+\
+Currency::Currency(SignType the_sign, DollarType the_dollar,\
+                   CentType the_cent) \{\
+  SetValue(the_sign, the_dollar, the_cent);\
+\}\
+\
+void Currency::SetValue(SignType the_sign, DollarType the_dollars,\
+                        CentType the_cents) \{\
+  if (the_cents > 99) throw "Cents Should be < 100";\
+\
+  amount_ = the_dollars * 100 + the_cents;\
+  if (MINUS == the_sign) amount_ = -amount_;\
+\}\
+\
+void Currency::SetValue(double the_amount) \{\
+  if (the_amount < 0)\
+    amount_ = (the_amount - 0.001) * 100;\
+  else\
+    amount_ = (the_amount + 0.001) * 100;\
+\}\
+\
+Currency Currency::SubTract(const Currency& x) const \{\
+  Currency y;\
+\
+  y.amount_ = amount_ - x.amount_;\
+  return y;\
+\}\
+\
+Currency Currency::Percent(double x) const \{\
+  Currency y;\
+\
+  y.amount_ = amount_ * x / 100;\
+  return y;\
+\}\
+\
+Currency Currency::Multiply(double x) const \{\
+  Currency y;\
+\
+  y.amount_ = amount_ * x;\
+  return y;\
+\}\
+\
+Currency Currency::Divide(double x) const \{\
+  Currency y;\
+\
+  y.amount_ = amount_ / x;\
+  return y;\
+\}\
+\
+Currency Currency::Currency::Add(const Currency& x) const \{\
+  Currency y;\
+\
+  y.amount_ = amount_ + x.amount_;\
+  return y;\
+\}\
+\
+void Currency::Input() \{\
+  double value;\
+\
+  std::cin >> value;\
+  SetValue(value);\
+\}\
+\
+void Currency::Output() const \{\
+  if (amount_ < 0) std::cout << '-';\
+  std::cout << '$' << GetDollars() << '.';\
+  if (GetCents() < 10) std::cout << '0';\
+  std::cout << GetCents() << std::endl;\
+\}\
+\
+int main() \{\
+  Currency c1, c2;\
+\
+  c1.Input();\
+  c2.SetValue(750);\
+  c1.Output();\
+\
+  c1.SubTract(c2).Output();\
+  c1.Percent(3).Output();\
+  c1.Multiply(3).Output();\
+  c1.Divide(3).Output();\
+  return 0;\
+\}\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1 \cf2 1.18\
+\pard\pardeftab720\partightenfactor0
+
+\f0 \cf2 #include <cmath>\
+#include <iostream>\
+\
+class Currency \{\
+  friend std::ostream& operator<<(std::ostream& out, const Currency& x);\
+  friend std::istream& operator>>(std::istream& in, Currency& x);\
+\
+ public:\
+  typedef enum \{ PLUS = 0, MINUS \} SIGN_TYPE;\
+  typedef unsigned long DOLLAR_TYPE;\
+  typedef unsigned int CENT_TYPE;\
+\
+ public:\
+  explicit Currency(SIGN_TYPE sign = PLUS, DOLLAR_TYPE dollars = 0,\
+                    CENT_TYPE cents = 0) \{\
+    amount_ = dollars * 100 + cents;\
+    amount_ = PLUS == sign ? amount_ : -amount_;\
+  \}\
+  ~Currency() = default;\
+  void SetValue(SIGN_TYPE the_sign, DOLLAR_TYPE the_dollars,\
+                CENT_TYPE the_cents) \{\
+    amount_ = the_dollars * 100 + the_cents;\
+    amount_ = PLUS == the_sign ? amount_ : -amount_;\
+  \}\
+  void SetValue(double x) \{\
+    amount_ = (x + 0.001) * 100;\
+    amount_ = amount_ >= 0 ? amount_ : -amount_;\
+  \}\
+  SIGN_TYPE GetSign() const \{ return amount_ >= 0 ? PLUS : MINUS; \}\
+  DOLLAR_TYPE GetDollars() const \{ return std::abs(amount_) / 100; \}\
+  CENT_TYPE GetCents() const \{ return amount_ - GetDollars() * 100; \}\
+  Currency operator+(const Currency& x) const \{\
+    Currency result;\
+\
+    result.amount_ = amount_ + x.amount_;\
+    return result;\
+  \}\
+  Currency operator-(const Currency& x) const \{\
+    Currency result;\
+\
+    result.amount_ = amount_ - x.amount_;\
+    return result;\
+  \}\
+  Currency operator%(const Currency& x) const \{\
+    Currency result;\
+\
+    result.amount_ = amount_ % x.amount_;\
+    return result;\
+  \}\
+  Currency operator/(const Currency& x) const \{\
+    Currency result;\
+\
+    result.amount_ = amount_ / x.amount_;\
+    return result;\
+  \}\
+  Currency& operator=(int x) \{\
+    amount_ = x;\
+    return *this;\
+  \}\
+  Currency& operator+=(const Currency& x) \{\
+    amount_ += x.amount_;\
+    return *this;\
+  \}\
+\
+ private:\
+  long amount_;\
+\};  // Class Currency\
+\
+std::ostream& operator<<(std::ostream& out, const Currency& x) \{\
+  out << x.GetDollars() << '.';\
+  if (x.GetCents() < 10) out << '0';\
+  out << x.GetCents();\
+  return out;\
+\}\
+\
+std::istream& operator>>(std::istream& in, Currency& x) \{\
+  long v;\
+  in >> v;\
+  x.amount_ = v;\
+  return in;\
+\}\
+\
+int main() \{\
+  Currency c1, c2;\
+\
+  c1 = 1000;\
+  c2 = 2345;\
+\
+  std::cout << c1 << std::endl;\
+  std::cout << c2 << std::endl;\
+\
+  std::cout << c2 - c1 << std::endl;\
+  std::cout << c2 % c1 << std::endl;\
+  std::cout << c2 / c1 << std::endl;\
+\
+  return 0;\
+\}\
+\
+1.16--1.18\
+by <https://github.com/HuangErGou/dsaa_cpp/blob/master/Chapter_01/p18.cc>\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1 \cf2 1.19\
+\pard\pardeftab720\partightenfactor0
+
+\f0 \cf2 long long not_recursion(size_t n)\{\
+	long long sum = 1;\
+	for  (size_t i=1; i <= n; ++i)\
+	\{\
+		sum *= i;\
+	\}\
+	return sum;\
+\}\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1 \cf2 1.20\
+\pard\pardeftab720\partightenfactor0
+
+\f0 \cf2 int Fibonacci(int n)\{\
+    if(n<=2)\{\
+        return 1;\
+    \}else\{\
+        return Fibonacci(n-1)+Fibonacci(n-2);\
+    \}\
+\}\
+int fibonacci2(unsigned int n) \{\
+  if (n <= 2) return 1;\
+  int pre_pre = 1, pre = 1;\
+  int result = pre_pre + pre;\
+\
+  for (unsigned int i = 3; i <= n; ++i) \{\
+    result = pre_pre + pre;\
+    pre_pre = pre;\
+    pre = result;\
+  \}\
+  return result;\
+\}\
+}
